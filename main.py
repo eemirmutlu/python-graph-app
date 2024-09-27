@@ -1,61 +1,72 @@
-import tkinter as tk
-from tkinter import messagebox
+import sys
 import requests
-from tkinter import font as tkfont
+from PyQt6 import QtWidgets, QtGui, QtCore
+from PyQt6.QtWidgets import QMessageBox
+
 from data import load_country_data, plot_graphs, save_data_to_excel
 
-class DataApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Veri Analizi Uygulaması")
-        self.root.geometry("800x600")
+class DataApp(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
 
-        self.custom_font = tkfont.Font(family="Helvetica", size=12)
+        self.setWindowTitle("Veri Analizi Uygulaması")
+        self.setGeometry(100, 100, 800, 600)
 
-        self.main_frame = tk.Frame(root, padx=20, pady=20, bg="#f4f4f4")
-        self.main_frame.pack(fill=tk.BOTH, expand=True)
+        self.custom_font = QtGui.QFont("Helvetica", 12)
 
-        self.main_frame.grid_rowconfigure(0, weight=1)
-        self.main_frame.grid_rowconfigure(1, weight=1)
-        self.main_frame.grid_rowconfigure(2, weight=1)
-        self.main_frame.grid_rowconfigure(3, weight=1)
-        self.main_frame.grid_rowconfigure(4, weight=1)
-        self.main_frame.grid_rowconfigure(5, weight=1)
-        self.main_frame.grid_rowconfigure(6, weight=1)
-        self.main_frame.grid_columnconfigure(0, weight=1)
-        self.main_frame.grid_columnconfigure(1, weight=1)
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout.setContentsMargins(20, 20, 20, 20)
 
-        tk.Label(self.main_frame, text="Ülke İsmi:", font=self.custom_font, bg="#f4f4f4").grid(row=0, column=0, padx=10, pady=10, sticky="e")
-        self.country_var = tk.StringVar()
-        self.country_entry = tk.Entry(self.main_frame, textvariable=self.country_var, font=self.custom_font, width=30)
-        self.country_entry.grid(row=0, column=1, padx=10, pady=10, sticky="w")
-        self.country_entry.bind("<KeyRelease>", self.update_country_list)
-        self.country_entry.bind("<Return>", self.select_country)
+        self.country_label = QtWidgets.QLabel("Ülke İsmi:")
+        self.country_label.setFont(self.custom_font)
+        self.main_layout.addWidget(self.country_label)
 
-        self.country_listbox = tk.Listbox(self.main_frame, font=self.custom_font, height=6, width=30)
-        self.country_listbox.grid(row=1, column=1, padx=10, pady=10, sticky="w")
-        self.country_listbox.bind("<ButtonRelease-1>", self.load_data_from_listbox)
+        self.country_entry = QtWidgets.QLineEdit(self)
+        self.country_entry.setFont(self.custom_font)
+        self.country_entry.setPlaceholderText("Ülke ismi girin ve seçin...")
+        self.country_entry.textChanged.connect(self.update_country_list)
+        self.main_layout.addWidget(self.country_entry)
 
-        years = [2020, 2021, 2022, 2023]
+        self.country_listbox = QtWidgets.QListWidget(self)
+        self.country_listbox.setFont(self.custom_font)
+        self.country_listbox.itemClicked.connect(self.load_data_from_listbox)
+        self.main_layout.addWidget(self.country_listbox)
+
         self.gsyh_entries = []
-        validate_float = self.root.register(self.validate_float)
+        years = [2020, 2021, 2022, 2023]
 
-        for i in range(4):
-            tk.Label(self.main_frame, text=f"{years[i]} GSYH:", font=self.custom_font, bg="#f4f4f4").grid(row=i+2, column=0, padx=10, pady=10, sticky="e")
-            entry = tk.Entry(self.main_frame, font=self.custom_font, width=20, validate="key", validatecommand=(validate_float, "%P"))
-            entry.grid(row=i+2, column=1, padx=10, pady=10, sticky="w")
+        for year in years:
+            layout = QtWidgets.QHBoxLayout()
+            label = QtWidgets.QLabel(f"{year} GSYH:")
+            label.setFont(self.custom_font)
+            layout.addWidget(label)
+
+            entry = QtWidgets.QLineEdit(self)
+            entry.setFont(self.custom_font)
+            entry.setPlaceholderText("Değer girin...")
+            entry.setValidator(QtGui.QDoubleValidator(0.99, 99.99, 2))
+            layout.addWidget(entry)
+
             self.gsyh_entries.append(entry)
+            self.main_layout.addLayout(layout)
 
-        tk.Button(self.main_frame, text="Kaydet", command=self.save_data, font=self.custom_font, bg="#4CAF50", fg="white", padx=10, pady=5).grid(row=6, column=0, padx=10, pady=10, sticky="e")
-        tk.Button(self.main_frame, text="Grafik Oluştur", command=self.create_graph, font=self.custom_font, bg="#2196F3", fg="white", padx=10, pady=5).grid(row=6, column=1, padx=10, pady=10, sticky="w")
+        button_layout = QtWidgets.QHBoxLayout()
+        self.save_button = QtWidgets.QPushButton("Kaydet", self)
+        self.save_button.setFont(self.custom_font)
+        self.save_button.setStyleSheet("background-color: #4CAF50; color: white;")
+        self.save_button.clicked.connect(self.save_data)
+        button_layout.addWidget(self.save_button)
+
+        self.graph_button = QtWidgets.QPushButton("Grafik Oluştur", self)
+        self.graph_button.setFont(self.custom_font)
+        self.graph_button.setStyleSheet("background-color: #2196F3; color: white;")
+        self.graph_button.clicked.connect(self.create_graph)
+        button_layout.addWidget(self.graph_button)
+
+        self.main_layout.addLayout(button_layout)
 
         self.countries = []
         self.load_country_list()
-
-    def validate_float(self, value):
-        if value == "" or value.replace('.', '', 1).isdigit():
-            return True
-        return False
 
     def load_country_list(self):
         try:
@@ -65,71 +76,63 @@ class DataApp:
             self.countries.sort()
             self.update_country_list()
         except Exception as e:
-            messagebox.showerror("Hata", f"Ülke listesi yüklenirken hata oluştu: {e}")
+            QMessageBox.critical(self, "Hata", f"Ülke listesi yüklenirken hata oluştu: {e}")
 
-    def update_country_list(self, event=None):
-        search_term = self.country_var.get().lower()
+    def update_country_list(self):
+        search_term = self.country_entry.text().lower()
         filtered_countries = [country for country in self.countries if search_term in country.lower()]
-        
-        self.country_listbox.delete(0, tk.END)
-        for country in filtered_countries:
-            self.country_listbox.insert(tk.END, country)
 
-    def load_data_from_listbox(self, event):
-        selected_country = self.country_listbox.get(tk.ACTIVE)
-        self.country_var.set(selected_country)
-        self.load_data(None)
+        self.country_listbox.clear()
+        self.country_listbox.addItems(filtered_countries)
 
-    def select_country(self, event):
-        selected_country = self.country_var.get()
-        if selected_country in self.countries:
-            self.load_data(None)
-        else:
-            messagebox.showerror("Hata", "Geçersiz ülke seçimi")
+    def load_data_from_listbox(self, item):
+        selected_country = item.text()
+        self.country_entry.setText(selected_country)
+        self.load_data()
 
-    def load_data(self, event):
-        country = self.country_var.get()
-        self.root.after(0, self._load_data, country)
+    def load_data(self):
+        country = self.country_entry.text()
+        self._load_data(country)
 
     def _load_data(self, country):
         try:
             data = load_country_data(country)
-            
+
             if data:
                 for i, value in enumerate(data):
-                    self.gsyh_entries[i].delete(0, tk.END)
-                    self.gsyh_entries[i].insert(0, value)
+                    self.gsyh_entries[i].setText(str(value))
             else:
                 for entry in self.gsyh_entries:
-                    entry.delete(0, tk.END)
+                    entry.clear()
         except Exception as e:
-            messagebox.showerror("Hata", f"Veri yüklenirken hata oluştu: {e}")
+            QMessageBox.critical(self, "Hata", f"Veri yüklenirken hata oluştu: {e}")
 
     def save_data(self):
-        country = self.country_var.get()
+        country = self.country_entry.text()
         gsyh = []
-        
+
         try:
             for entry in self.gsyh_entries:
-                value = float(entry.get())
+                value = float(entry.text())
                 gsyh.append(value)
-            
+
             if not country or len(gsyh) != 4:
                 raise ValueError("Ülke ismi ve 4 yıl için GSYH değerleri girilmelidir.")
 
             save_data_to_excel(country, gsyh)
-            messagebox.showinfo("Başarılı", "Veri kaydedildi.")
+            QMessageBox.information(self, "Başarılı", "Veri kaydedildi.")
         except ValueError as e:
-            messagebox.showerror("Hata", str(e))
+            QMessageBox.critical(self, "Hata", str(e))
 
     def create_graph(self):
         try:
             plot_graphs()
-            messagebox.showinfo("Başarılı", "Grafik resmi kaydedildi.")
         except Exception as e:
-            messagebox.showerror("Hata", str(e))
+            QMessageBox.critical(self, "Hata", str(e))
+
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = DataApp(root)
-    root.mainloop()
+    app = QtWidgets.QApplication(sys.argv)
+    window = DataApp()
+    window.show()
+    sys.exit(app.exec())

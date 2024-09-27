@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from openpyxl import load_workbook
+from PyQt6.QtWidgets import QMessageBox
 
 EXCEL_FILE = 'gsyh_data.xlsx'
 
@@ -44,6 +45,9 @@ def load_country_data(country):
     except FileNotFoundError:
         return None
 
+def show_message():
+    QMessageBox.information(None, "Başarılı", "Grafik resmi kaydedildi.")
+
 def plot_graphs():
     df = pd.read_excel(EXCEL_FILE, sheet_name='GSYH_Data')
     
@@ -55,7 +59,7 @@ def plot_graphs():
     bar_width = 0.5
     
     for i, year in enumerate(years):
-        plt.subplot(2, 2, i+1)
+        plt.subplot(2, 2, i + 1)
         bars = plt.bar(countries, df[year], color='blue', width=bar_width)
         plt.title(f'{year} GSYH', fontsize=14)
         plt.xlabel('Ülke', fontsize=10)
@@ -76,4 +80,8 @@ def plot_graphs():
     
     plt.tight_layout()
     plt.savefig('gsyh_graphs.png')
+
+    # Connect close event to show_message function
+    plt.gcf().canvas.mpl_connect('close_event', lambda event: show_message())
+    
     plt.show()
