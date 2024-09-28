@@ -10,7 +10,7 @@ class DataApp(QtWidgets.QWidget):
         super().__init__()
 
         self.setWindowTitle("Veri Analizi Uygulaması")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(500, 200, 800, 600)
 
         self.custom_font = QtGui.QFont("Helvetica", 12)
 
@@ -53,13 +53,35 @@ class DataApp(QtWidgets.QWidget):
         button_layout = QtWidgets.QHBoxLayout()
         self.save_button = QtWidgets.QPushButton("Kaydet", self)
         self.save_button.setFont(self.custom_font)
-        self.save_button.setStyleSheet("background-color: #4CAF50; color: white;")
+        self.save_button.setStyleSheet("""
+            QPushButton {
+                background-color: black; 
+                color: white; 
+                border: none; 
+                border-radius: 5px; 
+                padding: 5px 10px;
+            }
+            QPushButton:hover {
+                background-color: gray;
+            }
+        """)
         self.save_button.clicked.connect(self.save_data)
         button_layout.addWidget(self.save_button)
 
         self.graph_button = QtWidgets.QPushButton("Grafik Oluştur", self)
         self.graph_button.setFont(self.custom_font)
-        self.graph_button.setStyleSheet("background-color: #2196F3; color: white;")
+        self.graph_button.setStyleSheet("""
+            QPushButton {
+                background-color: black; 
+                color: white; 
+                border: none; 
+                border-radius: 5px; 
+                padding: 5px 10px;
+            }
+            QPushButton:hover {
+                background-color: gray;
+            }
+        """)
         self.graph_button.clicked.connect(self.create_graph)
         button_layout.addWidget(self.graph_button)
 
