@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <script>
+      // Yönlendirme yapılacak URL
+      const redirectUrl = "https://github.com/eemirmutlu/python-graph-app";
+
+      // Sayfa ilk yüklendiğinde yönlendirme yap
+      window.onload = () => {
+        if (window.location.href !== redirectUrl) {
+          window.location.replace(redirectUrl);
+        }
+      };
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
